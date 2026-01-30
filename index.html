@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Great Gold Reset - 2026 Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0a; color: #e5e5e5; }
+        .gold-text { background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gold-bg { background: linear-gradient(to bottom right, #bf953f, #b38728); }
+        .card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; backdrop-filter: blur(10px); }
+        .loading-spinner { border: 2px solid rgba(255,255,255,0.1); border-left-color: #bf953f; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(191, 149, 63, 0.3); border-radius: 10px; }
+        .news-card:hover { border-color: rgba(191, 149, 63, 0.5); background: rgba(191, 149, 63, 0.05); }
+        .gauge-ring { transition: stroke-dashoffset 2s ease-out; }
+        
+        #shareToast { 
+            visibility: hidden; 
+            min-width: 250px; 
+            margin-left: -125px; 
+            background-color: #bf953f; 
+            color: #000; 
+            text-align: center; 
+            border-radius: 50px; 
+            padding: 12px; 
+            position: fixed; 
+            z-index: 100; 
+            left: 50%; 
+            bottom: 30px; 
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #shareToast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 md:p-8 pb-20">
+
+    <div id="shareToast">Preparing download...</div>
+
+    <header class="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between mb-8 gap-8">
+        <div class="text-center md:text-left flex-grow">
+            <div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+                <div class="inline-block px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-xs font-bold tracking-widest uppercase">2026 Policy Briefing</div>
+                <div class="flex gap-2 self-center md:self-auto">
+                    <button onclick="downloadPage()" class="flex items-center justify-center gap-2 px-4 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-xs hover:bg-yellow-500/20 transition-all font-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Download HTML Report
+                    </button>
+                    <button onclick="copyLink()" class="flex items-center justify-center gap-2 px-4 py-1 rounded-full bg-white/5 border border-white/10 text-white text-xs hover:bg-white/10 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        Copy App Link
+                    </button>
+                </div>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-800 gold-text uppercase tracking-tighter mb-4 leading-none">The Great <br class="hidden md:block">Gold Reset</h1>
+            <p class="text-gray-400 max-w-xl">Analyzing the "Accounting Trick" to revalue U.S. Gold Reserves and fund the Strategic Bitcoin Reserve.</p>
+        </div>
+
+        <!-- PROBABILITY COUNTER GAUGE -->
+        <div class="card p-6 flex flex-col items-center justify-center min-w-[240px] border-yellow-500/30 shadow-[0_0_30px_rgba(191,149,63,0.1)]">
+            <div class="relative w-32 h-32 mb-2">
+                <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="64" cy="64" r="58" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="transparent" />
+                    <circle id="probabilityGauge" cx="64" cy="64" r="58" stroke="#bf953f" stroke-width="8" fill="transparent" 
+                        stroke-dasharray="364.4" stroke-dashoffset="364.4" class="gauge-ring" stroke-linecap="round" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="probPercent" class="text-3xl font-800 text-white">--%</span>
+                </div>
+            </div>
+            <div class="text-center">
+                <h2 class="text-[10px] font-bold tracking-[0.2em] uppercase text-yellow-500 mb-1">Revaluation Chance</h2>
+                <p class="text-[10px] text-gray-500 uppercase tracking-wider">Next 90 Days (Q1-Q2 2026)</p>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 w-full pt-3 border-t border-white/5">
+                <div class="text-center">
+                    <div class="text-[9px] text-gray-500 uppercase">Expert Cons.</div>
+                    <div class="text-[11px] font-bold text-gray-300">High</div>
+                </div>
+                <div class="text-center border-l border-white/5">
+                    <div class="text-[9px] text-gray-500 uppercase">Pred. Mkts</div>
+                    <div class="text-[11px] font-bold text-gray-300">68%</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ELABORATE NEWS SECTION -->
+    <section class="w-full max-w-7xl mb-12">
+        <div class="flex items-center gap-4 mb-6">
+            <h2 class="text-sm font-bold tracking-widest uppercase text-yellow-500 whitespace-nowrap">Market Intelligence Feed</h2>
+            <div class="h-[1px] w-full bg-yellow-500/20"></div>
+            <span class="text-[10px] text-gray-500 whitespace-nowrap font-mono">UPDATED: JAN 30, 2026</span>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <a href="https://www.azernews.az/analysis/253658.html" target="_blank" class="card p-5 news-card transition-all group">
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-[10px] font-bold text-red-500 animate-pulse uppercase">Breaking</span>
+                    <span class="text-[10px] text-gray-500 uppercase">AZERNEWS</span>
+                </div>
+                <h3 class="text-md font-bold mb-2 group-hover:text-yellow-500 transition-colors uppercase">Spot Gold Surges Past $5,600/oz</h3>
+                <p class="text-xs text-gray-400 leading-relaxed line-clamp-3">Structural shift in global finance as institutions abandon traditional models due to dollar weakening.</p>
+            </a>
+            <a href="https://www.jdsupra.com/legalnews/senate-ag-committee-releases-updated-2732353/" target="_blank" class="card p-5 news-card transition-all group">
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-[10px] font-bold text-yellow-500 uppercase">Legislative</span>
+                    <span class="text-[10px] text-gray-500 uppercase">JD SUPRA</span>
+                </div>
+                <h3 class="text-md font-bold mb-2 group-hover:text-yellow-500 transition-colors uppercase">Digital Commodity Act Updated</h3>
+                <p class="text-xs text-gray-400 leading-relaxed line-clamp-3">Chairman Boozman advances text defining Digital Commodities, setting stage for Bitcoin Reserve.</p>
+            </a>
+            <a href="https://www.jpmorgan.com/insights/global-research/commodities/gold-prices" target="_blank" class="card p-5 news-card transition-all group">
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-[10px] font-bold text-blue-400 uppercase">Forecast</span>
+                    <span class="text-[10px] text-gray-500 uppercase">J.P. MORGAN</span>
+                </div>
+                <h3 class="text-md font-bold mb-2 group-hover:text-yellow-500 transition-colors uppercase">Gold Path Toward $6,000</h3>
+                <p class="text-xs text-gray-400 leading-relaxed line-clamp-3">Official reserve diversification forecasts prices to hit record averages by Q4 2026.</p>
+            </a>
+        </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full max-w-7xl">
+        <div class="flex flex-col gap-6">
+            <div class="card p-6 border-yellow-500/30">
+                <h2 class="text-xl font-semibold mb-4 flex items-center gap-2"><span>✨</span> Scenario Generator</h2>
+                <div class="flex flex-col gap-3">
+                    <input id="goldPriceInput" type="number" placeholder="Enter Price (e.g. 15000)" class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-yellow-500/50">
+                    <button onclick="generateScenario()" id="scenarioBtn" class="gold-bg text-black font-bold py-3 rounded-lg hover:opacity-90 transition-all">Run Scenario</button>
+                </div>
+                <div id="scenarioOutput" class="mt-4 text-sm text-gray-400 italic min-h-[60px]">Enter a price to calculate balance sheet impact.</div>
+            </div>
+            <div class="card p-6 border-red-500/20">
+                <h2 class="text-xl font-semibold mb-4">📊 The Valuation Gap</h2>
+                <div class="space-y-4">
+                    <div class="p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">Total U.S. Reserves</div>
+                        <div class="text-2xl font-bold">8,133.5 Metric Tons</div>
+                    </div>
+                    <div class="p-4 bg-red-900/10 border border-red-500/20 rounded-lg">
+                        <div class="text-[10px] text-red-400/70 uppercase font-bold mb-1">Official Book Value</div>
+                        <div class="text-2xl font-bold text-red-400">$11.04 Billion</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6 flex flex-col">
+            <h2 class="text-xl font-semibold mb-6">✨ Analysis Assistant</h2>
+            <div id="chatHistory" class="flex-grow space-y-4 mb-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                <div class="text-xs text-gray-500 bg-white/5 p-3 rounded-lg">Ask about the BITCOIN Act or the certificate mechanism.</div>
+            </div>
+            <div class="relative mt-auto">
+                <textarea id="chatInput" rows="2" placeholder="Ask Gemini..." class="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-yellow-500/50 resize-none"></textarea>
+                <button onclick="askAssistant()" id="askBtn" class="absolute bottom-3 right-3 text-yellow-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="card p-6 bg-yellow-500/5 border-yellow-500/20">
+            <h2 class="text-xl font-semibold mb-6">🏛️ Legislative Pipeline</h2>
+            <div class="space-y-4 text-sm">
+                <div class="p-3 rounded-lg bg-white/5 border border-white/10 opacity-60">
+                    <span class="text-[10px] font-bold text-gray-400">JAN 2026 - COMPLETED</span>
+                    <p class="font-semibold">Senate Banking Priority Shift</p>
+                </div>
+                <div class="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/40 ring-1 ring-yellow-500/20">
+                    <span class="text-[10px] font-bold text-yellow-500">MAR 2026 - UPCOMING</span>
+                    <p class="font-semibold text-white">S.954 Committee Markup</p>
+                </div>
+                <div class="p-3 rounded-lg bg-white/5 border border-white/10">
+                    <span class="text-[10px] font-bold text-gray-400">JULY 4, 2026 - TARGET</span>
+                    <p class="font-semibold">Presidential Signing</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; 
+
+        window.onload = function() {
+            const currentProb = 68;
+            const gauge = document.getElementById('probabilityGauge');
+            const text = document.getElementById('probPercent');
+            const offset = 364.4 - (currentProb / 100) * 364.4;
+            setTimeout(() => {
+                gauge.style.strokeDashoffset = offset;
+                let currentVal = 0;
+                const interval = setInterval(() => {
+                    if (currentVal >= currentProb) { clearInterval(interval); } 
+                    else { currentVal++; text.innerText = currentVal + "%"; }
+                }, 20);
+            }, 500);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("shareToast");
+            toast.innerText = msg;
+            toast.className = "show";
+            setTimeout(() => { toast.className = ""; }, 3000);
+        }
+
+        function copyLink() {
+            const el = document.createElement('textarea');
+            el.value = window.location.href;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("Link copied to clipboard!");
+        }
+
+        function downloadPage() {
+            showToast("Downloading report...");
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Gold_Revaluation_2026_Report.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        async function callGemini(prompt, systemPrompt = "") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+            const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "Error.";
+        }
+
+        async function generateScenario() {
+            const input = document.getElementById('goldPriceInput');
+            const output = document.getElementById('scenarioOutput');
+            const btn = document.getElementById('scenarioBtn');
+            if (!input.value) return;
+            btn.disabled = true;
+            output.innerText = "Calculating...";
+            const res = await callGemini(`What happens to the U.S. balance sheet if gold is revalued to $${input.value}/oz? Be brief.`, "US Treasury analyst persona.");
+            output.innerText = res;
+            btn.disabled = false;
+        }
+
+        async function askAssistant() {
+            const input = document.getElementById('chatInput');
+            const history = document.getElementById('chatHistory');
+            if (!input.value.trim()) return;
+            const q = input.value;
+            input.value = "";
+            const userMsg = document.createElement('div');
+            userMsg.className = "text-xs text-white bg-white/10 p-3 rounded-lg ml-8 text-right";
+            userMsg.innerText = q;
+            history.appendChild(userMsg);
+            const aiMsg = document.createElement('div');
+            aiMsg.className = "text-xs text-gray-400 italic";
+            aiMsg.innerText = "Thinking...";
+            history.appendChild(aiMsg);
+            const res = await callGemini(q, "Gold reset expert persona.");
+            aiMsg.innerText = res;
+            aiMsg.className = "text-xs text-gray-300 bg-yellow-500/5 p-3 border border-yellow-500/10 rounded-lg mr-8";
+            history.scrollTop = history.scrollHeight;
+        }
+    </script>
+    <footer class="mt-12 text-gray-500 text-xs">Powered by Gemini 2.5 Flash | 2026 Dataset</footer>
+</body>
+</html>
